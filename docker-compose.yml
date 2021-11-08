@@ -12,13 +12,13 @@ services:
     command: rails server -b 0.0.0.0
     environment:
       - RAILS_ENV=${RAILS_ENV:-development}
-      - JWT_ISS=${JWT_ISS:-http://localhost:3000}
+      - JWT_ISS=${JWT_ISS:-http://localhost:3001}
       - MONGO_URL=brokers-mongo:27017
       - HOSTNAME=exchange-rails
       - SERVICE_NAME=exchange
       - HUTCH_MQ_HOST=brokers-rabbitmq
       - HUTCH_MQ_API_HOST=brokers-rabbitmq
-      - HUTCH_MQ_EXCHANGE=resources
+      - HUTCH_MQ_EXCHANGE=bolsadevalores
     ports:
       - 3001:3000
 
@@ -35,9 +35,23 @@ services:
       - MONGO_URL=brokers-mongo:27017
       - HOSTNAME=exchange-hutch
       - RAILS_ENV=${RAILS_ENV:-development}
-      - HUTCH_MQ_HOST=exchange-rabbitmq
-      - HUTCH_MQ_API_HOST=exchange-rabbitmq
-      - HUTCH_MQ_EXCHANGE=resources
+      - HUTCH_MQ_HOST=brokers-rabbitmq
+      - HUTCH_MQ_API_HOST=brokers-rabbitmq
+      - HUTCH_MQ_EXCHANGE=bolsadevalores
+
+  exchange-docs:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: exchange-example
+    volumes:
+      - .:/exchange
+    ports:
+      - 8809:8808
+    container_name: exchange-docs
+    command: yard server -r
+    depends_on:
+      - exchange-rails
 
 networks:
   default:
