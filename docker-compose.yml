@@ -1,0 +1,59 @@
+version: '3.5'
+
+services:
+  exchange-rails:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: exchange-example
+    volumes:
+      - .:/exchange
+    container_name: exchange-rails
+    command: rails server -b 0.0.0.0
+    environment:
+      - RAILS_ENV=${RAILS_ENV:-development}
+      - JWT_ISS=${JWT_ISS:-http://localhost:3001}
+      - MONGO_URL=brokers-mongo:27017
+      - HOSTNAME=exchange-rails
+      - SERVICE_NAME=exchange
+      - HUTCH_MQ_HOST=brokers-rabbitmq
+      - HUTCH_MQ_API_HOST=brokers-rabbitmq
+      - HUTCH_MQ_EXCHANGE=bolsadevalores
+    ports:
+      - 3001:3000
+
+  exchange-hutch:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: exchange-example
+    volumes:
+      - .:/exchange
+    container_name: exchange-hutch
+    command: hutch
+    environment:
+      - MONGO_URL=brokers-mongo:27017
+      - HOSTNAME=exchange-hutch
+      - RAILS_ENV=${RAILS_ENV:-development}
+      - HUTCH_MQ_HOST=brokers-rabbitmq
+      - HUTCH_MQ_API_HOST=brokers-rabbitmq
+      - HUTCH_MQ_EXCHANGE=bolsadevalores
+
+  exchange-docs:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: exchange-example
+    volumes:
+      - .:/exchange
+    ports:
+      - 8809:8808
+    container_name: exchange-docs
+    command: yard server -r
+    depends_on:
+      - exchange-rails
+
+networks:
+  default:
+    external:
+      name: brokers-bridge
